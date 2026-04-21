@@ -202,42 +202,44 @@ class MLP:
         """
          
         import copy
+        
         N = len(X)
         historial_pesos = [] if guardar_pesos else None
+
         for epoca in range(self.epocas):
             idx = np.random.permutation(N)
             X_shuffled = X[idx]
             y_shuffled = y[idx]
 
-        for start in range(0, N, self.batch_size):
-            end  = start + self.batch_size
-            X_b  = X_shuffled[start:end]
-            y_b  = y_shuffled[start:end]
-            self._forward(X_b)
-            dW, db = self._backward(y_b)
-            self._actualizar_pesos(dW, db)
+            for start in range(0, N, self.batch_size):
+                end  = start + self.batch_size
+                X_b  = X_shuffled[start:end]
+                y_b  = y_shuffled[start:end]
+                self._forward(X_b)
+                dW, db = self._backward(y_b)
+                self._actualizar_pesos(dW, db)
 
-        y_pred   = self._forward(X)
-        perdida  = self._calcular_perdida(y, y_pred)
-        accuracy = self._calcular_accuracy(y, y_pred)
-        self.historial_perdida.append(perdida)
-        self.historial_accuracy.append(accuracy)
+            y_pred   = self._forward(X)
+            perdida  = self._calcular_perdida(y, y_pred)
+            accuracy = self._calcular_accuracy(y, y_pred)
+            self.historial_perdida.append(perdida)
+            self.historial_accuracy.append(accuracy)
 
         # Guardar copia profunda de los pesos de esta época
-        if guardar_pesos:
-            pesos_ep = [
-                {'W': copy.deepcopy(W).tolist(),
-                 'b': copy.deepcopy(b).tolist()}
-                for W, b in zip(self.W, self.b)
-            ]
-            historial_pesos.append(pesos_ep)
+            if guardar_pesos:
+                pesos_ep = [
+                    {'W': copy.deepcopy(W).tolist(),
+                    'b': copy.deepcopy(b).tolist()}
+                    for W, b in zip(self.W, self.b)
+                ]
+                historial_pesos.append(pesos_ep)
 
-        if verbose and (epoca + 1) % 50 == 0:
-            print(
-                f"  Época {epoca + 1:4d}/{self.epocas} | "
-                f"Pérdida: {perdida:.4f} | "
-                f"Accuracy: {accuracy * 100:.1f}%"
-            )
+            if verbose and (epoca + 1) % 50 == 0:
+                print(
+                    f"  Época {epoca + 1:4d}/{self.epocas} | "
+                    f"Pérdida: {perdida:.4f} | "
+                    f"Accuracy: {accuracy * 100:.1f}%"
+                )
 
         return historial_pesos
 
