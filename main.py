@@ -97,6 +97,7 @@ def correr_escenario1(args: argparse.Namespace) -> None:
         historial_perdida=red.historial_perdida,
         historial_accuracy=red.historial_accuracy,
         titulo="Escenario 1 — Clasificación Binaria [3→4→1]",
+        red=red,
 )
 
     exportar(
@@ -173,6 +174,7 @@ def correr_escenario2(args: argparse.Namespace) -> None:
         historial_perdida=red.historial_perdida,
         historial_accuracy=red.historial_accuracy,
         titulo="Escenario 2 — Clasificación Multiclase [3→8→3]",
+        red=red,
     )
 
     exportar(

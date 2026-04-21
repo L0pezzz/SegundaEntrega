@@ -98,15 +98,13 @@ class Visualizador:
         historial_perdida,
         historial_accuracy,
         titulo,
+        red,           # instancia MLP para calcular la frontera
         ruta_salida=None,
     ):
-        """
-        Genera la figura completa de 3 paneles.
+        from frontera import calcular_frontera_binaria, calcular_fronteras_multiclase
+        from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+        import numpy as np
 
-        Parámetros:
-            ruta_salida : (opcional) si se indica, guarda el PNG en esa ruta.
-                          Si es None (por defecto), muestra la figura en pantalla.
-        """
         fig = plt.figure(figsize=(17, 5))
         fig.suptitle(titulo, fontsize=13, fontweight='bold', y=1.01)
 
@@ -118,6 +116,29 @@ class Visualizador:
         self._graficar_accuracy(ax2, historial_accuracy)
         self._graficar_3d(ax3, X, y_real_int, y_pred_int)
 
+        # ── Dibujar frontera de decisión ──────────────────────
+        rango_min = X.min(axis=0) - 0.5
+        rango_max = X.max(axis=0) + 0.5
+
+        if self.modo == 'binario':
+            frontera = calcular_frontera_binaria(red, rango_min, rango_max, resolucion=25)
+            fronteras = [frontera]
+            colores_frontera = ['#9B59B6']
+        else:
+            fronteras = calcular_fronteras_multiclase(red, rango_min, rango_max, resolucion=20)
+            colores_frontera = ['#4F7FE0', '#E0904F', '#6BCB77']
+
+        for frontera, color in zip(fronteras, colores_frontera):
+            verts = frontera['vertices']
+            tris  = frontera['triangulos']
+            if len(verts) == 0:
+                continue
+            verts = np.array(verts)
+            tris  = np.array(tris)
+            mesh  = [[verts[t[0]], verts[t[1]], verts[t[2]]] for t in tris]
+            poly  = Poly3DCollection(mesh, alpha=0.15, facecolor=color, edgecolor='none')
+            ax3.add_collection3d(poly)
+
         plt.tight_layout()
 
         if ruta_salida:
@@ -125,4 +146,4 @@ class Visualizador:
             plt.close()
             print(f"  Figura guardada en: {ruta_salida}")
         else:
-            plt.show()   # abre ventana interactiva en tu PC
+            plt.show()
