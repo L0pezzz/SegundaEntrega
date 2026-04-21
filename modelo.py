@@ -194,50 +194,53 @@ class MLP:
     # ENTRENAMIENTO
     # ─────────────────────────────────────────────────────
 
-    def entrenar(self, X: np.ndarray, y: np.ndarray, verbose: bool = True) -> None:
+    def entrenar(self,X: np.ndarray,y: np.ndarray, verbose: bool = True, guardar_pesos: bool = False,) -> list[list[dict]] | None:
+    
         """
-        Ciclo de entrenamiento completo con mini-batches.
-
-        En cada época:
-          1. Mezcla aleatoria de los datos
-          2. Divide en mini-batches
-          3. Forward → Backward → Actualizar pesos
-          4. Registra pérdida y accuracy sobre el conjunto completo
-
-        Parámetros:
-            X       : datos de entrada, shape (N, 3)
-            y       : etiquetas, shape (N, 1) para binario o (N, K) para multiclase
-            verbose : si True, imprime métricas cada 50 épocas
+        Si guardar_pesos=True, retorna una lista con los pesos al final
+        de cada época (para usar en exportador.py).
         """
+         
+        import copy
         N = len(X)
+        historial_pesos = [] if guardar_pesos else None
         for epoca in range(self.epocas):
-            # Mezclar en cada época para evitar sesgos de orden
             idx = np.random.permutation(N)
             X_shuffled = X[idx]
             y_shuffled = y[idx]
 
-            # Mini-batches
-            for start in range(0, N, self.batch_size):
-                end   = start + self.batch_size
-                X_b   = X_shuffled[start:end]
-                y_b   = y_shuffled[start:end]
-                self._forward(X_b)
-                dW, db = self._backward(y_b)
-                self._actualizar_pesos(dW, db)
+        for start in range(0, N, self.batch_size):
+            end  = start + self.batch_size
+            X_b  = X_shuffled[start:end]
+            y_b  = y_shuffled[start:end]
+            self._forward(X_b)
+            dW, db = self._backward(y_b)
+            self._actualizar_pesos(dW, db)
 
-            # Registrar métricas sobre todos los datos
-            y_pred = self._forward(X)
-            perdida  = self._calcular_perdida(y, y_pred)
-            accuracy = self._calcular_accuracy(y, y_pred)
-            self.historial_perdida.append(perdida)
-            self.historial_accuracy.append(accuracy)
+        y_pred   = self._forward(X)
+        perdida  = self._calcular_perdida(y, y_pred)
+        accuracy = self._calcular_accuracy(y, y_pred)
+        self.historial_perdida.append(perdida)
+        self.historial_accuracy.append(accuracy)
 
-            if verbose and (epoca + 1) % 50 == 0:
-                print(
-                    f"  Época {epoca + 1:4d}/{self.epocas} | "
-                    f"Pérdida: {perdida:.4f} | "
-                    f"Accuracy: {accuracy * 100:.1f}%"
-                )
+        # Guardar copia profunda de los pesos de esta época
+        if guardar_pesos:
+            pesos_ep = [
+                {'W': copy.deepcopy(W).tolist(),
+                 'b': copy.deepcopy(b).tolist()}
+                for W, b in zip(self.W, self.b)
+            ]
+            historial_pesos.append(pesos_ep)
+
+        if verbose and (epoca + 1) % 50 == 0:
+            print(
+                f"  Época {epoca + 1:4d}/{self.epocas} | "
+                f"Pérdida: {perdida:.4f} | "
+                f"Accuracy: {accuracy * 100:.1f}%"
+            )
+
+        return historial_pesos
+
 
     # ─────────────────────────────────────────────────────
     # PREDICCIÓN
