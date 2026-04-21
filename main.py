@@ -5,7 +5,7 @@ import numpy as np
 from datos      import GeneradorBinario, GeneradorMulticlase
 from modelo     import MLP
 from exportador import exportar
-
+from visualizador import Visualizador
 
 # ─── Parseo de argumentos ────────────────────────────────────────────────────
 
@@ -89,6 +89,16 @@ def correr_escenario1(args: argparse.Namespace) -> None:
         'n_clases':              2,
     }
 
+    vis = Visualizador(modo='binario')
+    vis.graficar(
+        X=X,
+        y_real_int=y_int,
+        y_pred_int=red.predecir(X),
+        historial_perdida=red.historial_perdida,
+        historial_accuracy=red.historial_accuracy,
+        titulo="Escenario 1 — Clasificación Binaria [3→4→1]",
+)
+
     exportar(
         ruta=args.salida,
         red=red,
@@ -154,6 +164,16 @@ def correr_escenario2(args: argparse.Namespace) -> None:
         'accuracy_final':         round(accuracy, 2),
         'n_clases':               3,
     }
+
+    vis = Visualizador(modo='multiclase')
+    vis.graficar(
+        X=X,
+        y_real_int=y_int,
+        y_pred_int=red.predecir(X),
+        historial_perdida=red.historial_perdida,
+        historial_accuracy=red.historial_accuracy,
+        titulo="Escenario 2 — Clasificación Multiclase [3→8→3]",
+    )
 
     exportar(
         ruta=args.salida,
